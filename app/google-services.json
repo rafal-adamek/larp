@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "244522561806",
+    "firebase_url": "https://larp-c0238.firebaseio.com",
+    "project_id": "larp-c0238",
+    "storage_bucket": "larp-c0238.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:244522561806:android:34fdb1978fc673838aa75f",
+        "android_client_info": {
+          "package_name": "com.up.larp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "244522561806-91c6nerttarbsiarm9kr5ci14qsq27g2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.up.larp",
+            "certificate_hash": "a47726816c6f0650968c26bc14c3961242ec6add"
+          }
+        },
+        {
+          "client_id": "244522561806-lp7vd3vvunci3ior1dal553gtsb3i5rh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAxyrDS4TnNZUfsZbYb3sc05aIFQfJqoIg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "244522561806-lp7vd3vvunci3ior1dal553gtsb3i5rh.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
