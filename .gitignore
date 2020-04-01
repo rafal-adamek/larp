@@ -10,7 +10,6 @@
 /captures
 .externalNativeBuild
 .director
-gradlew
 gradlew.bat
 gradle/
 .idea/*
