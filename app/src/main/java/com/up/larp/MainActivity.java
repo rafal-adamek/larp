@@ -1,6 +1,8 @@
 package com.up.larp;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.media.Image;
 import android.net.Uri;
@@ -12,6 +14,9 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import android.os.Bundle;
 
 import com.google.android.gms.tasks.OnFailureListener;
@@ -29,10 +34,44 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Here, thisActivity is the current activity
+        if (ContextCompat.checkSelfPermission(MainActivity.this,
+                Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(getApplicationContext(), "Permission is not granted", Toast.LENGTH_SHORT).show();
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                    Manifest.permission.CAMERA)) {
+                Toast.makeText(getApplicationContext(), "Toast 2", Toast.LENGTH_SHORT).show();
+
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.CAMERA}, REQUEST_IMAGE_CAPTURE);
+                Toast.makeText(getApplicationContext(), "Request", Toast.LENGTH_SHORT).show();
+
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+            } else {
+                Toast.makeText(getApplicationContext(), "Request permission", Toast.LENGTH_SHORT).show();
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.CAMERA}, REQUEST_IMAGE_CAPTURE);
+                Toast.makeText(getApplicationContext(), "Request", Toast.LENGTH_SHORT).show();
+
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+            }
+        } else {
+            Toast.makeText(getApplicationContext(), "Permissions already granted", Toast.LENGTH_SHORT).show();
+        }
+
 
         FloatingActionButton fab = findViewById(R.id.fab);
 
