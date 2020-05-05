@@ -1,29 +1,146 @@
 package com.up.larp;
 
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.media.Image;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import android.os.Bundle;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.ml.vision.FirebaseVision;
+import com.google.firebase.ml.vision.common.FirebaseVisionImage;
+import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata;
+import com.google.firebase.ml.vision.label.FirebaseVisionImageLabel;
+import com.google.firebase.ml.vision.label.FirebaseVisionImageLabeler;
+
+import java.io.File;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Here, thisActivity is the current activity
+        if (ContextCompat.checkSelfPermission(MainActivity.this,
+                Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(getApplicationContext(), "Permission is not granted", Toast.LENGTH_SHORT).show();
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                    Manifest.permission.CAMERA)) {
+                Toast.makeText(getApplicationContext(), "Toast 2", Toast.LENGTH_SHORT).show();
+
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.CAMERA}, REQUEST_IMAGE_CAPTURE);
+                Toast.makeText(getApplicationContext(), "Request", Toast.LENGTH_SHORT).show();
+
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+            } else {
+                Toast.makeText(getApplicationContext(), "Request permission", Toast.LENGTH_SHORT).show();
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.CAMERA}, REQUEST_IMAGE_CAPTURE);
+                Toast.makeText(getApplicationContext(), "Request", Toast.LENGTH_SHORT).show();
+
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+            }
+        } else {
+            Toast.makeText(getApplicationContext(), "Permissions already granted", Toast.LENGTH_SHORT).show();
+        }
+
+
         FloatingActionButton fab = findViewById(R.id.fab);
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showCamera();
+                dispatchTakePictureIntent();
             }
         });
     }
 
-    private void showCamera() {
-        Toast.makeText(MainActivity.this, "Test", Toast.LENGTH_SHORT).show();
+    /*private void showCamera() {
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivity(intent);
+    }*/
+
+
+    static final int REQUEST_IMAGE_CAPTURE = 1;
+
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+        }
     }
+
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        ImageView imageView = findViewById(R.id.img);
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            Bundle extras = data.getExtras();
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            imageView.setImageBitmap(imageBitmap);
+            FirebaseVisionImage image = FirebaseVisionImage.fromBitmap(imageBitmap);
+            FirebaseVisionImageLabeler labeler = FirebaseVision.getInstance()
+                    .getOnDeviceImageLabeler();
+
+            labeler.processImage(image)
+                    .addOnSuccessListener(new OnSuccessListener<List<FirebaseVisionImageLabel>>() {
+                        @Override
+                        public void onSuccess(List<
+                                FirebaseVisionImageLabel> labels) {
+                            Toast.makeText(getApplicationContext(), "Działa", Toast.LENGTH_SHORT).show();
+                            for (FirebaseVisionImageLabel label: labels) {
+                                String text = label.getText();
+                                String entityId = label.getEntityId();
+                                float confidence = label.getConfidence();
+                                Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+                            }
+
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Toast.makeText(getApplicationContext(), "Nie działa", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        }
+    }
+
+
+
+
+
+
+
+
 }
