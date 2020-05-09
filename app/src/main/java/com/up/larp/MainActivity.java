@@ -27,6 +27,7 @@ import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata;
 import com.google.firebase.ml.vision.label.FirebaseVisionImageLabel;
 import com.google.firebase.ml.vision.label.FirebaseVisionImageLabeler;
+import com.up.larp.json.JsonParse;
 
 import java.io.File;
 import java.util.List;
@@ -90,6 +91,8 @@ public class MainActivity extends AppCompatActivity {
 
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
+
+    JsonParse test = JsonParse.fetchJson(); //Tu miała być szybka instancja klasy żeby zobaczyć czy działa czy nie XD
 
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
