@@ -40,6 +40,17 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        final JsonParse janiewiem = new JsonParse();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                janiewiem.fetchJson();
+            }
+        }).start();
+
+
+
 
         // Here, thisActivity is the current activity
         if (ContextCompat.checkSelfPermission(MainActivity.this,
@@ -92,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
 
-    JsonParse test = JsonParse.fetchJson(); //Tu miała być szybka instancja klasy żeby zobaczyć czy działa czy nie XD
+
 
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
