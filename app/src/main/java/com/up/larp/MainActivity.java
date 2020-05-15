@@ -25,6 +25,7 @@ import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.label.FirebaseVisionImageLabel;
 import com.google.firebase.ml.vision.label.FirebaseVisionImageLabeler;
 import com.up.larp.qr.QrScanner;
+import com.up.larp.json.JsonParse;
 
 import java.util.List;
 
@@ -34,6 +35,17 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        final JsonParse janiewiem = new JsonParse();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                janiewiem.fetchJson();
+            }
+        }).start();
+
+
+
 
         // Here, thisActivity is the current activity
         if (ContextCompat.checkSelfPermission(MainActivity.this,
