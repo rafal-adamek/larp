@@ -4,15 +4,13 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.media.Image;
-import android.net.Uri;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -24,17 +22,14 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.ml.vision.FirebaseVision;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
-import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata;
 import com.google.firebase.ml.vision.label.FirebaseVisionImageLabel;
 import com.google.firebase.ml.vision.label.FirebaseVisionImageLabeler;
+import com.up.larp.qr.QrScanner;
 import com.up.larp.json.JsonParse;
 
-import java.io.File;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
         if (ContextCompat.checkSelfPermission(MainActivity.this,
                 Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(getApplicationContext(), "Permission is not granted", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Permission is not granted", Toast.LENGTH_SHORT).show();
 
             // Should we show an explanation?
             if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
@@ -85,34 +80,30 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-        FloatingActionButton fab = findViewById(R.id.fab);
+        FloatingActionButton fab = findViewById(R.id.fabCamera);
+        FloatingActionButton qrFab = findViewById(R.id.fabQr);
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dispatchTakePictureIntent();
+                dispatchTakePictureIntent(REQUEST_IMAGE_CAPTURE);
+            }
+        });
+
+        qrFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dispatchTakePictureIntent(REQUEST_QR_SCAN);
             }
         });
     }
 
-    /*private void showCamera() {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        startActivity(intent);
-    }*/
-
-
-    static final int REQUEST_IMAGE_CAPTURE = 1;
-
-
-
-    private void dispatchTakePictureIntent() {
+    private void dispatchTakePictureIntent(int request) {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            startActivityForResult(takePictureIntent, request);
         }
     }
-
-
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -132,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
                         public void onSuccess(List<
                                 FirebaseVisionImageLabel> labels) {
                             Toast.makeText(getApplicationContext(), "Działa", Toast.LENGTH_SHORT).show();
-                            for (FirebaseVisionImageLabel label: labels) {
+                            for (FirebaseVisionImageLabel label : labels) {
                                 String text = label.getText();
                                 String entityId = label.getEntityId();
                                 float confidence = label.getConfidence();
@@ -147,14 +138,28 @@ public class MainActivity extends AppCompatActivity {
                             Toast.makeText(getApplicationContext(), "Nie działa", Toast.LENGTH_SHORT).show();
                         }
                     });
+        } else if (requestCode == REQUEST_QR_SCAN && resultCode == RESULT_OK) {
+            parseQr((Bitmap) data.getExtras().get("data"));
         }
     }
 
+    private void parseQr(Bitmap image) {
+        FirebaseVisionImage qr = FirebaseVisionImage.fromBitmap(image);
+        QrScanner qrScanner = new QrScanner();
+        qrScanner.parse(qr, new QrScanner.ResultCallback() {
+            @Override
+            public void onComplete(String url) {
+                // load barcode url
+            }
 
+            @Override
+            public void onFailed(String error) {
+                Toast.makeText(MainActivity.this, "Failed to read qr", Toast.LENGTH_SHORT).show();
+            }
+        });
 
+    }
 
-
-
-
-
+    static final int REQUEST_IMAGE_CAPTURE = 1;
+    static final int REQUEST_QR_SCAN = 2;
 }
