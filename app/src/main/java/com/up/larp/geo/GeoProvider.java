@@ -25,23 +25,15 @@ public class GeoProvider {
     public GeoProvider(Activity activity) {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(activity);
         
-        Observable.interval(20, TimeUnit.SECONDS)
+        Observable.interval(2, TimeUnit.SECONDS)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
-                .subscribe(new Consumer<Long>() {
-                    @Override
-                    public void accept(Long aLong) {
-                        fusedLocationClient.getLastLocation()
-                                .addOnSuccessListener(new OnSuccessListener<Location>() {
-                                    @Override
-                                    public void onSuccess(Location location) {
-                                        if (location != null) {
-                                            locationSubject.onNext(new SimpleLocation(location.getLatitude(), location.getLongitude()));
-                                        }
-                                    }
-                                });
-                    }
-                });
+                .subscribe(aLong -> fusedLocationClient.getLastLocation()
+                        .addOnSuccessListener(location -> {
+                            if (location != null) {
+                                locationSubject.onNext(new SimpleLocation(location.getLatitude(), location.getLongitude()));
+                            }
+                        }));
 
     }
 
