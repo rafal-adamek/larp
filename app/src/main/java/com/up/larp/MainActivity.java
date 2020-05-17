@@ -23,6 +23,7 @@ import com.google.firebase.ml.vision.FirebaseVision;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.label.FirebaseVisionImageLabel;
 import com.google.firebase.ml.vision.label.FirebaseVisionImageLabeler;
+import com.up.larp.json.LarpObject;
 import com.up.larp.labeling.ImageLabeler;
 import com.up.larp.qr.QrScanner;
 import com.up.larp.json.LarpJsonParser;
@@ -30,7 +31,7 @@ import com.up.larp.json.LarpJsonParser;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements ImageLabeler.LabelCallback {
+public class MainActivity extends AppCompatActivity implements ImageLabeler.LabelCallback, LarpJsonParser.JsonResultCallback {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,6 +106,10 @@ public class MainActivity extends AppCompatActivity implements ImageLabeler.Labe
         Toast.makeText(this, labels.toString(), Toast.LENGTH_LONG).show();
     }
 
+    @Override
+    public void onJsonObjectReceived(List<LarpObject> larpObjects) {
+        runOnUiThread(() -> Toast.makeText(this, larpObjects.toString(), Toast.LENGTH_LONG).show());
+    }
 
     private void parseQr(Bitmap image) {
         FirebaseVisionImage qr = FirebaseVisionImage.fromBitmap(image);
@@ -112,7 +117,9 @@ public class MainActivity extends AppCompatActivity implements ImageLabeler.Labe
         qrScanner.parse(qr, new QrScanner.ResultCallback() {
             @Override
             public void onComplete(String url) {
-                Toast.makeText(MainActivity.this, url, Toast.LENGTH_SHORT).show();
+                LarpJsonParser larpJsonParser = new LarpJsonParser();
+
+                larpJsonParser.fetchJson(url, MainActivity.this);
             }
 
             @Override
