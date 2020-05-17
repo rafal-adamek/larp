@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -24,28 +23,19 @@ import com.google.firebase.ml.vision.FirebaseVision;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.label.FirebaseVisionImageLabel;
 import com.google.firebase.ml.vision.label.FirebaseVisionImageLabeler;
+import com.up.larp.labeling.ImageLabeler;
 import com.up.larp.qr.QrScanner;
-import com.up.larp.json.JsonParse;
+import com.up.larp.json.LarpJsonParser;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ImageLabeler.LabelCallback {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        final JsonParse janiewiem = new JsonParse();
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                janiewiem.fetchJson();
-            }
-        }).start();
-
-
-
 
         // Here, thisActivity is the current activity
         if (ContextCompat.checkSelfPermission(MainActivity.this,
@@ -83,19 +73,9 @@ public class MainActivity extends AppCompatActivity {
         FloatingActionButton fab = findViewById(R.id.fabCamera);
         FloatingActionButton qrFab = findViewById(R.id.fabQr);
 
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dispatchTakePictureIntent(REQUEST_IMAGE_CAPTURE);
-            }
-        });
+        fab.setOnClickListener(v -> dispatchTakePictureIntent(REQUEST_IMAGE_CAPTURE));
 
-        qrFab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dispatchTakePictureIntent(REQUEST_QR_SCAN);
-            }
-        });
+        qrFab.setOnClickListener(v -> dispatchTakePictureIntent(REQUEST_QR_SCAN));
     }
 
     private void dispatchTakePictureIntent(int request) {
@@ -113,35 +93,18 @@ public class MainActivity extends AppCompatActivity {
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
             imageView.setImageBitmap(imageBitmap);
-            FirebaseVisionImage image = FirebaseVisionImage.fromBitmap(imageBitmap);
-            FirebaseVisionImageLabeler labeler = FirebaseVision.getInstance()
-                    .getOnDeviceImageLabeler();
-
-            labeler.processImage(image)
-                    .addOnSuccessListener(new OnSuccessListener<List<FirebaseVisionImageLabel>>() {
-                        @Override
-                        public void onSuccess(List<
-                                FirebaseVisionImageLabel> labels) {
-                            Toast.makeText(getApplicationContext(), "Działa", Toast.LENGTH_SHORT).show();
-                            for (FirebaseVisionImageLabel label : labels) {
-                                String text = label.getText();
-                                String entityId = label.getEntityId();
-                                float confidence = label.getConfidence();
-                                Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
-                            }
-
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Toast.makeText(getApplicationContext(), "Nie działa", Toast.LENGTH_SHORT).show();
-                        }
-                    });
+            ImageLabeler imageLabeler = new ImageLabeler();
+            imageLabeler.label(imageBitmap, this);
         } else if (requestCode == REQUEST_QR_SCAN && resultCode == RESULT_OK) {
             parseQr((Bitmap) data.getExtras().get("data"));
         }
     }
+
+    @Override
+    public void onLabelsReady(List<String> labels) {
+        Toast.makeText(this, labels.toString(), Toast.LENGTH_LONG).show();
+    }
+
 
     private void parseQr(Bitmap image) {
         FirebaseVisionImage qr = FirebaseVisionImage.fromBitmap(image);

@@ -11,7 +11,7 @@ import java.net.URL;
 import java.net.URLConnection;
 
 
-public class JsonParse {
+public class LarpJsonParser {
 
 
     public void fetchJson() { //To był zwykły void ale nie mogłem stworzyć instancji klasy w mainactivity.java XDDDDDDD chuj go wie dlaczego
