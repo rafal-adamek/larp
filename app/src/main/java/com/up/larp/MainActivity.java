@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements ImageLabeler.Labe
         qrScanner.parse(qr, new QrScanner.ResultCallback() {
             @Override
             public void onComplete(String url) {
-                // load barcode url
+                Toast.makeText(MainActivity.this, url, Toast.LENGTH_SHORT).show();
             }
 
             @Override

@@ -33,28 +33,20 @@ public class QrScanner {
         FirebaseVisionBarcodeDetector detector = FirebaseVision.getInstance().getVisionBarcodeDetector(options);
 
         Task<List<FirebaseVisionBarcode>> result = detector.detectInImage(visionImage)
-                .addOnSuccessListener(new OnSuccessListener<List<FirebaseVisionBarcode>>() {
-                    @Override
-                    public void onSuccess(List<FirebaseVisionBarcode> barcodes) {
-                        for (FirebaseVisionBarcode barcode : barcodes) {
-                            int valueType = barcode.getValueType();
-                            // See API reference for complete list of supported types
-                            switch (valueType) {
-                                case FirebaseVisionBarcode.TYPE_URL:
-                                    String title = barcode.getUrl().getTitle();
-                                    String url = barcode.getUrl().getUrl();
-                                    resultCallback.onComplete(url);
-                                    break;
-                            }
+                .addOnSuccessListener(barcodes -> {
+                    for (FirebaseVisionBarcode barcode : barcodes) {
+                        int valueType = barcode.getValueType();
+                        // See API reference for complete list of supported types
+                        switch (valueType) {
+                            case FirebaseVisionBarcode.TYPE_URL:
+                                String title = barcode.getUrl().getTitle();
+                                String url = barcode.getUrl().getUrl();
+                                resultCallback.onComplete(url);
+                                break;
                         }
                     }
                 })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        resultCallback.onFailed("Bummer");
-                    }
-                });
+                .addOnFailureListener(e -> resultCallback.onFailed("Bummer"));
     }
 
     public interface ResultCallback {
