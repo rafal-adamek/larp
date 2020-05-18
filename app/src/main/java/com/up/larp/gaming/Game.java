@@ -48,6 +48,12 @@ public class Game {
             }
         }
 
+        sendHint(larpObject);
+
+        return false;
+    }
+
+    private void sendHint(LarpObject larpObject) {
         String hint = "Wrong object";
 
         double larpLat = truncate(larpObject.getLat());
@@ -59,8 +65,6 @@ public class Game {
         if (lon > larpLon) hint = "Go south"; else if(lon < larpLon) hint = "Go north";
 
         callback.onFailedScan(hint);
-
-        return false;
     }
 
     private double truncate(double value) {
@@ -90,6 +94,9 @@ public class Game {
     }
 
 
+    /**
+     * Interface responsible for informing its clients about game state changes.
+     */
     public interface GameCallback {
         void onNextLevel(Game game);
         void onFailedScan(String hint);

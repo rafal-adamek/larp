@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -22,16 +23,20 @@ import com.up.larp.geo.GeoProvider;
 import com.up.larp.json.LarpJsonParser;
 import com.up.larp.json.LarpObject;
 import com.up.larp.labeling.ImageLabeler;
+import com.up.larp.leaderboard.FirebaseUserRepository;
+import com.up.larp.leaderboard.User;
 import com.up.larp.qr.QrScanner;
 
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements ImageLabeler.LabelCallback, LarpJsonParser.JsonResultCallback, Game.GameCallback {
+public class MainActivity extends AppCompatActivity implements ImageLabeler.LabelCallback, LarpJsonParser.JsonResultCallback, Game.GameCallback, FirebaseUserRepository.Callback {
 
     private Game game;
 
     FloatingActionButton fab;
     FloatingActionButton qrFab;
+
+    private final FirebaseUserRepository userRepository = new FirebaseUserRepository();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +89,8 @@ public class MainActivity extends AppCompatActivity implements ImageLabeler.Labe
         game.attachGeoProvider(geoProvider.subscribe());
 
         promptUsername();
+
+        userRepository.attachCallback(this);
     }
 
     private void dispatchTakePictureIntent(int request) {
@@ -172,6 +179,25 @@ public class MainActivity extends AppCompatActivity implements ImageLabeler.Labe
         endgame.setText(hint);
     }
 
+    @Override
+    public void usersFetched(List<User> users) {
+
+    }
+
+    @Override
+    public void userUpdated() {
+    }
+
+    @Override
+    public void userFetched(User user) {
+
+    }
+
+    @Override
+    public void requestFailed(String message) {
+
+    }
+
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int REQUEST_QR_SCAN = 2;
 
@@ -187,6 +213,8 @@ public class MainActivity extends AppCompatActivity implements ImageLabeler.Labe
 
                     TextView name = findViewById(R.id.name);
                     name.setText(game.getUsername());
+
+                    userRepository.getUsers();
                 }).show();
     }
 }
