@@ -93,7 +93,6 @@ public class Game {
         return points;
     }
 
-
     /**
      * Interface responsible for informing its clients about game state changes.
      */

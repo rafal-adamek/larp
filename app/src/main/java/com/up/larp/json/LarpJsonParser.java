@@ -1,20 +1,17 @@
 package com.up.larp.json;
 
 
-import android.util.Log;
-
-import com.google.gson.*;
-import com.up.larp.geo.SimpleLocation;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
-
 
 public class LarpJsonParser {
 
@@ -55,6 +52,9 @@ public class LarpJsonParser {
         thread.start();
     }
 
+    /**
+     * Callback for json parsing results.
+     */
     public interface JsonResultCallback {
         void onJsonObjectReceived(List<LarpObject> location);
     }

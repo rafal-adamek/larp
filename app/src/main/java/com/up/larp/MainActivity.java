@@ -7,11 +7,15 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -24,6 +28,7 @@ import com.up.larp.json.LarpJsonParser;
 import com.up.larp.json.LarpObject;
 import com.up.larp.labeling.ImageLabeler;
 import com.up.larp.leaderboard.FirebaseUserRepository;
+import com.up.larp.leaderboard.LeaderboardActivity;
 import com.up.larp.leaderboard.User;
 import com.up.larp.qr.QrScanner;
 
@@ -35,6 +40,7 @@ public class MainActivity extends AppCompatActivity implements ImageLabeler.Labe
 
     FloatingActionButton fab;
     FloatingActionButton qrFab;
+    TextView endgame;
 
     private final FirebaseUserRepository userRepository = new FirebaseUserRepository();
 
@@ -77,7 +83,7 @@ public class MainActivity extends AppCompatActivity implements ImageLabeler.Labe
 
         fab = findViewById(R.id.fabCamera);
         qrFab = findViewById(R.id.fabQr);
-
+        endgame = findViewById(R.id.endgame);
 
         fab.setOnClickListener(v -> dispatchTakePictureIntent(REQUEST_IMAGE_CAPTURE));
 
@@ -154,10 +160,25 @@ public class MainActivity extends AppCompatActivity implements ImageLabeler.Labe
 
     @Override
     public void onGameFinished(String username, int points) {
-        TextView textView = findViewById(R.id.endgame);
-        textView.setText("You win, " + username);
+        endgame.setText("You win, " + username);
         fab.setVisibility(View.GONE);
 //        qrFab.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.leaderboard:
+                startActivity(new Intent(this, LeaderboardActivity.class));
+        }
+        return true;
     }
 
     @Override
@@ -171,6 +192,8 @@ public class MainActivity extends AppCompatActivity implements ImageLabeler.Labe
         points.setText("Points: " + game.getPoints());
         progress.setText("Progress: " + game.getProgress() + " / " + game.getLarpObjects().size());
         labels.setText("Label: " + game.getLarpObjects().get(game.getProgress() - 1).getLabel());
+
+        userRepository.postUser(new User(game.getUsername(), game.getPoints()));
     }
 
     @Override
@@ -195,7 +218,7 @@ public class MainActivity extends AppCompatActivity implements ImageLabeler.Labe
 
     @Override
     public void requestFailed(String message) {
-
+        endgame.setText(message);
     }
 
     static final int REQUEST_IMAGE_CAPTURE = 1;

@@ -15,13 +15,19 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 import io.reactivex.rxjava3.subjects.Subject;
 
-
+/**
+ * Class responsible for tracking user's location.
+ */
 public class GeoProvider {
 
     private FusedLocationProviderClient fusedLocationClient;
 
     private Subject<SimpleLocation> locationSubject = PublishSubject.create();
 
+    /**
+     * Constructor
+     * @param activity to attach lifecycle
+     */
     public GeoProvider(Activity activity) {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(activity);
         
@@ -34,9 +40,13 @@ public class GeoProvider {
                                 locationSubject.onNext(new SimpleLocation(location.getLatitude(), location.getLongitude()));
                             }
                         }));
-
     }
 
+    /**
+     * Method used to subscribe for user's location.
+     *
+     * @return observable with user's location
+     */
     public Observable<SimpleLocation> subscribe() {
         return locationSubject;
     }
