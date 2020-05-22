@@ -15,36 +15,38 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 import io.reactivex.rxjava3.subjects.Subject;
 
-
+/**
+ * Class responsible for tracking user's location.
+ */
 public class GeoProvider {
 
     private FusedLocationProviderClient fusedLocationClient;
 
     private Subject<SimpleLocation> locationSubject = PublishSubject.create();
 
+    /**
+     * Constructor
+     * @param activity to attach lifecycle
+     */
     public GeoProvider(Activity activity) {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(activity);
         
-        Observable.interval(20, TimeUnit.SECONDS)
+        Observable.interval(2, TimeUnit.SECONDS)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
-                .subscribe(new Consumer<Long>() {
-                    @Override
-                    public void accept(Long aLong) {
-                        fusedLocationClient.getLastLocation()
-                                .addOnSuccessListener(new OnSuccessListener<Location>() {
-                                    @Override
-                                    public void onSuccess(Location location) {
-                                        if (location != null) {
-                                            locationSubject.onNext(new SimpleLocation(location.getLatitude(), location.getLongitude()));
-                                        }
-                                    }
-                                });
-                    }
-                });
-
+                .subscribe(aLong -> fusedLocationClient.getLastLocation()
+                        .addOnSuccessListener(location -> {
+                            if (location != null) {
+                                locationSubject.onNext(new SimpleLocation(location.getLatitude(), location.getLongitude()));
+                            }
+                        }));
     }
 
+    /**
+     * Method used to subscribe for user's location.
+     *
+     * @return observable with user's location
+     */
     public Observable<SimpleLocation> subscribe() {
         return locationSubject;
     }

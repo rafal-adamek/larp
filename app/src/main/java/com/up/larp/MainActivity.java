@@ -4,48 +4,50 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
-import android.os.Bundle;
-
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.firebase.ml.vision.FirebaseVision;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
-import com.google.firebase.ml.vision.label.FirebaseVisionImageLabel;
-import com.google.firebase.ml.vision.label.FirebaseVisionImageLabeler;
+import com.up.larp.gaming.Game;
+import com.up.larp.geo.GeoProvider;
+import com.up.larp.json.LarpJsonParser;
+import com.up.larp.json.LarpObject;
+import com.up.larp.labeling.ImageLabeler;
+import com.up.larp.leaderboard.FirebaseUserRepository;
+import com.up.larp.leaderboard.LeaderboardActivity;
+import com.up.larp.leaderboard.User;
 import com.up.larp.qr.QrScanner;
-import com.up.larp.json.JsonParse;
 
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ImageLabeler.LabelCallback, LarpJsonParser.JsonResultCallback, Game.GameCallback, FirebaseUserRepository.Callback {
+
+    private Game game;
+
+    FloatingActionButton fab;
+    FloatingActionButton qrFab;
+    TextView endgame;
+
+    private final FirebaseUserRepository userRepository = new FirebaseUserRepository();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        final JsonParse janiewiem = new JsonParse();
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                janiewiem.fetchJson();
-            }
-        }).start();
-
-
-
 
         // Here, thisActivity is the current activity
         if (ContextCompat.checkSelfPermission(MainActivity.this,
@@ -79,23 +81,22 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(getApplicationContext(), "Permissions already granted", Toast.LENGTH_SHORT).show();
         }
 
+        fab = findViewById(R.id.fabCamera);
+        qrFab = findViewById(R.id.fabQr);
+        endgame = findViewById(R.id.endgame);
 
-        FloatingActionButton fab = findViewById(R.id.fabCamera);
-        FloatingActionButton qrFab = findViewById(R.id.fabQr);
+        fab.setOnClickListener(v -> dispatchTakePictureIntent(REQUEST_IMAGE_CAPTURE));
 
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dispatchTakePictureIntent(REQUEST_IMAGE_CAPTURE);
-            }
-        });
+        qrFab.setOnClickListener(v -> dispatchTakePictureIntent(REQUEST_QR_SCAN));
 
-        qrFab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dispatchTakePictureIntent(REQUEST_QR_SCAN);
-            }
-        });
+        GeoProvider geoProvider = new GeoProvider(this);
+
+        game = new Game(this);
+        game.attachGeoProvider(geoProvider.subscribe());
+
+        promptUsername();
+
+        userRepository.attachCallback(this);
     }
 
     private void dispatchTakePictureIntent(int request) {
@@ -113,34 +114,29 @@ public class MainActivity extends AppCompatActivity {
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
             imageView.setImageBitmap(imageBitmap);
-            FirebaseVisionImage image = FirebaseVisionImage.fromBitmap(imageBitmap);
-            FirebaseVisionImageLabeler labeler = FirebaseVision.getInstance()
-                    .getOnDeviceImageLabeler();
-
-            labeler.processImage(image)
-                    .addOnSuccessListener(new OnSuccessListener<List<FirebaseVisionImageLabel>>() {
-                        @Override
-                        public void onSuccess(List<
-                                FirebaseVisionImageLabel> labels) {
-                            Toast.makeText(getApplicationContext(), "Działa", Toast.LENGTH_SHORT).show();
-                            for (FirebaseVisionImageLabel label : labels) {
-                                String text = label.getText();
-                                String entityId = label.getEntityId();
-                                float confidence = label.getConfidence();
-                                Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
-                            }
-
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Toast.makeText(getApplicationContext(), "Nie działa", Toast.LENGTH_SHORT).show();
-                        }
-                    });
+            ImageLabeler imageLabeler = new ImageLabeler();
+            imageLabeler.label(imageBitmap, this);
         } else if (requestCode == REQUEST_QR_SCAN && resultCode == RESULT_OK) {
             parseQr((Bitmap) data.getExtras().get("data"));
         }
+    }
+
+    @Override
+    public void onLabelsReady(List<String> labels) {
+        runOnUiThread(() -> {
+            Toast.makeText(this, labels.toString(), Toast.LENGTH_LONG).show();
+            game.verifyLabels(labels);
+        });
+    }
+
+    @Override
+    public void onJsonObjectReceived(List<LarpObject> larpObjects) {
+        runOnUiThread(() -> {
+            game.setLarpObjects(larpObjects);
+            fab.setVisibility(View.VISIBLE);
+            qrFab.setVisibility(View.GONE);
+            if (larpObjects.size() > 0) Toast.makeText(this, "Objects fetched", Toast.LENGTH_LONG).show();
+        });
     }
 
     private void parseQr(Bitmap image) {
@@ -149,7 +145,9 @@ public class MainActivity extends AppCompatActivity {
         qrScanner.parse(qr, new QrScanner.ResultCallback() {
             @Override
             public void onComplete(String url) {
-                // load barcode url
+                LarpJsonParser larpJsonParser = new LarpJsonParser();
+
+                larpJsonParser.fetchJson(url, MainActivity.this);
             }
 
             @Override
@@ -160,6 +158,86 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void onGameFinished(String username, int points) {
+        endgame.setText("You win, " + username);
+        fab.setVisibility(View.GONE);
+//        qrFab.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.leaderboard:
+                startActivity(new Intent(this, LeaderboardActivity.class));
+        }
+        return true;
+    }
+
+    @Override
+    public void onNextLevel(Game game) {
+        TextView name = findViewById(R.id.name);
+        TextView points = findViewById(R.id.points);
+        TextView progress = findViewById(R.id.progress);
+        TextView labels = findViewById(R.id.labels);
+
+        name.setText(game.getUsername());
+        points.setText("Points: " + game.getPoints());
+        progress.setText("Progress: " + game.getProgress() + " / " + game.getLarpObjects().size());
+        labels.setText("Label: " + game.getLarpObjects().get(game.getProgress() - 1).getLabel());
+
+        userRepository.postUser(new User(game.getUsername(), game.getPoints()));
+    }
+
+    @Override
+    public void onFailedScan(String hint) {
+        TextView endgame = findViewById(R.id.endgame);
+        endgame.setText(hint);
+    }
+
+    @Override
+    public void usersFetched(List<User> users) {
+
+    }
+
+    @Override
+    public void userUpdated() {
+    }
+
+    @Override
+    public void userFetched(User user) {
+
+    }
+
+    @Override
+    public void requestFailed(String message) {
+        endgame.setText(message);
+    }
+
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int REQUEST_QR_SCAN = 2;
+
+    private void promptUsername() {
+        EditText et = new EditText(this);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Set username")
+                .setView(et)
+                .setCancelable(false)
+                .setPositiveButton("OK", (dialog, which) -> {
+                    game.setUsername(et.getText().toString().isEmpty() ? "Unknown" : et.getText().toString());
+
+                    TextView name = findViewById(R.id.name);
+                    name.setText(game.getUsername());
+
+                    userRepository.getUsers();
+                }).show();
+    }
 }
