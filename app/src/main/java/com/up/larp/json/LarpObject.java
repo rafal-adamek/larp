@@ -1,5 +1,8 @@
 package com.up.larp.json;
 
+/**
+ *
+ */
 public class LarpObject {
 
     private String label;

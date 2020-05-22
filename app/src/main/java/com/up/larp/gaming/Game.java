@@ -7,6 +7,9 @@ import io.reactivex.rxjava3.core.Observable;
 import java.text.DecimalFormat;
 import java.util.List;
 
+/**
+ * Class responsible for main logic
+ */
 public class Game {
 
     private List<LarpObject> larpObjects;
@@ -20,6 +23,11 @@ public class Game {
         this.callback = callback;
     }
 
+
+    /**
+     * Subscribes to the provider observable
+     * @param locationObservable stream of user's location
+     */
     public void attachGeoProvider(Observable<SimpleLocation> locationObservable) {
         locationObservable.subscribe(location -> this.currentLocation = location);
     }
@@ -36,6 +44,11 @@ public class Game {
         return progress;
     }
 
+    /**
+     *
+     * @param labels list of strings (labels) describing items on picture
+     * @return true if labels were verified correctly and false otherwise
+     */
     public boolean verifyLabels(List<String> labels) {
         LarpObject larpObject = larpObjects.get(progress);
 

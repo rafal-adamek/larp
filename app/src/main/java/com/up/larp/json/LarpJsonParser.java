@@ -13,8 +13,15 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Class responsible for fetching json file and taking out labels
+ */
 public class LarpJsonParser {
 
+    /**
+     * @param sUrl URL to .json file
+     * @param callback callback for json parsing results
+     */
     public void fetchJson(String sUrl, JsonResultCallback callback) {
         Thread thread = new Thread(() -> {
             URL url;

@@ -1,5 +1,8 @@
 package com.up.larp.leaderboard;
 
+/**
+ * Simple class implements info about user
+ */
 public class User {
 
     private String name;

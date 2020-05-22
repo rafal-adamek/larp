@@ -10,6 +10,9 @@ import com.up.larp.R;
 
 import java.util.List;
 
+/**
+ * New activity that show us leaderboards
+ */
 public class LeaderboardActivity extends AppCompatActivity implements FirebaseUserRepository.Callback {
 
     FirebaseUserRepository userRepository = new FirebaseUserRepository();

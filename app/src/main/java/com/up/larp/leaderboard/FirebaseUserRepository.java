@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Class responsible for connection with server that stores users info
+ */
 public class FirebaseUserRepository implements UserRepository {
 
     FirebaseFirestore firestore = FirebaseFirestore.getInstance();
@@ -18,10 +21,11 @@ public class FirebaseUserRepository implements UserRepository {
         this.callback = callback;
     }
 
+    /**
+     * @param name name of user's to download info from server
+     */
     @Override
     public void getUser(String name) {
-        Log.d("Testoviron", "GetUser");
-
         firestore.collection("user")
                 .document(name)
                 .get()
@@ -57,6 +61,10 @@ public class FirebaseUserRepository implements UserRepository {
                 });
     }
 
+    /**
+     * @param user Sending info about user to server
+     *
+     */
     @Override
     public void postUser(User user) {
         Log.d("Testoviron", "PostUser");
