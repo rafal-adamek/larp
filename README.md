@@ -18,3 +18,5 @@ gry.
 
 Do obsługi kodów QR oraz rozpoznawania obiektów na obrazie można wykorzystać
 dostępne biblioteki programistyczne.
+
+[Dokumentacja](https://rafal-adamek.github.io/larp/docs/)
