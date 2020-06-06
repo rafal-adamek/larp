@@ -20,6 +20,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.up.larp.gaming.Game;
@@ -30,6 +31,7 @@ import com.up.larp.labeling.ImageLabeler;
 import com.up.larp.leaderboard.FirebaseUserRepository;
 import com.up.larp.leaderboard.LeaderboardActivity;
 import com.up.larp.leaderboard.User;
+import com.up.larp.permission.PermissionChecker;
 import com.up.larp.qr.QrScanner;
 
 import java.util.List;
@@ -47,55 +49,17 @@ public class MainActivity extends AppCompatActivity implements ImageLabeler.Labe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        // Here, thisActivity is the current activity
-        if (ContextCompat.checkSelfPermission(MainActivity.this,
-                Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(getApplicationContext(), "Permission is not granted", Toast.LENGTH_SHORT).show();
-
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                    Manifest.permission.CAMERA)) {
-                Toast.makeText(getApplicationContext(), "Toast 2", Toast.LENGTH_SHORT).show();
-
-                ActivityCompat.requestPermissions(MainActivity.this,
-                        new String[]{Manifest.permission.CAMERA}, REQUEST_IMAGE_CAPTURE);
-                Toast.makeText(getApplicationContext(), "Request", Toast.LENGTH_SHORT).show();
-
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-            } else {
-                Toast.makeText(getApplicationContext(), "Request permission", Toast.LENGTH_SHORT).show();
-                ActivityCompat.requestPermissions(MainActivity.this,
-                        new String[]{Manifest.permission.CAMERA}, REQUEST_IMAGE_CAPTURE);
-                Toast.makeText(getApplicationContext(), "Request", Toast.LENGTH_SHORT).show();
-
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
-            }
-        } else {
-            Toast.makeText(getApplicationContext(), "Permissions already granted", Toast.LENGTH_SHORT).show();
-        }
-
+        setContentView(R.layout.activity_main); //Set layout
+        new PermissionChecker().checkCamera(this);
         fab = findViewById(R.id.fabCamera);
         qrFab = findViewById(R.id.fabQr);
         endgame = findViewById(R.id.endgame);
-
         fab.setOnClickListener(v -> dispatchTakePictureIntent(REQUEST_IMAGE_CAPTURE));
-
         qrFab.setOnClickListener(v -> dispatchTakePictureIntent(REQUEST_QR_SCAN));
-
         GeoProvider geoProvider = new GeoProvider(this);
-
         game = new Game(this);
         game.attachGeoProvider(geoProvider.subscribe());
-
         promptUsername();
-
         userRepository.attachCallback(this);
     }
 
